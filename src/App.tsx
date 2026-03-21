@@ -84,7 +84,7 @@ export default function App() {
     } catch (error: any) {
       console.error("Error:", error);
       const errorMessage = error?.message?.includes("API Key") 
-        ? "I can't connect right now because the API key is missing. Please check your settings."
+        ? "I'm having trouble connecting to my brain (the API key seems to be missing). Don't worry, this service is free—you don't need to buy anything. Please check the 'Secrets' panel in the AI Studio settings to ensure the GEMINI_API_KEY is set."
         : "Something went wrong on my end. Give me a second and try again.";
       setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
     } finally {
