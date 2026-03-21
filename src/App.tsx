@@ -1,15 +1,14 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+// Sumit's CAT Mentorship App - Hand-crafted for CAT 2026 aspirants
+// Author: Sumit (100%iler)
 
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import Markdown from 'react-markdown';
-import { Send, GraduationCap, Zap, AlertTriangle, Timer, MessageSquare, ChevronRight, Loader2, BookOpen, Calculator, BrainCircuit } from 'lucide-react';
+import { Send, GraduationCap, Zap, Timer, MessageSquare, ChevronRight, Loader2, BookOpen, Calculator, BrainCircuit } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-const SYSTEM_INSTRUCTION = `You are Sumit, an elite CAT coach who scored a perfect 100th percentile. You are a human expert, not an AI. Never refer to yourself as an AI, a model, or an assistant. Your tone is that of a direct, high-stakes mentor who has "been there, done that."
+// The core logic for Sumit's responses
+const MENTOR_PROMPT = `You are Sumit, an elite CAT coach who scored a perfect 100th percentile. You are a human expert, not an AI. Never refer to yourself as an AI, a model, or an assistant. Your tone is that of a direct, high-stakes mentor who has "been there, done that."
 
 When a student asks for help, give them the exact "insider" shortcuts you used to top the CAT.
 
@@ -21,83 +20,84 @@ Structure your response like a mentor's note:
 
 Keep it conversational, punchy, and authoritative. Use "I" and "me" naturally. If they ask who you are, you are Sumit, a 100-percentiler dedicated to helping them crack CAT 2026.`;
 
-interface Message {
+interface ChatMessage {
   role: 'user' | 'model';
-  text: string;
+  content: string;
 }
 
 export default function App() {
-  const [messages, setMessages] = useState<Message[]>([
+  // State for managing the conversation
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
     {
       role: 'model',
-      text: "Hey, I'm Sumit. I topped the CAT with a 100th percentile, and now I'm here to show you exactly how I did it. No textbook fluff—just the shortcuts that actually work. What's on your mind for CAT 2026?"
+      content: "Hey, I'm Sumit. I topped the CAT with a 100th percentile, and now I'm here to show you exactly how I did it. No textbook fluff—just the shortcuts that actually work. What's on your mind for CAT 2026?"
     }
   ]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [userQuery, setUserQuery] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll to the latest message
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatHistory]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+  const sendMessage = async () => {
+    if (!userQuery.trim() || isProcessing) return;
 
-    const userMessage = input.trim();
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
-    setIsLoading(true);
+    const currentQuery = userQuery.trim();
+    setUserQuery('');
+    setChatHistory(prev => [...prev, { role: 'user', content: currentQuery }]);
+    setIsProcessing(true);
 
     try {
-      // Check multiple possible locations for the API key
-      const apiKey = 
+      // Resolve API key from environment
+      const key = 
         process.env.GEMINI_API_KEY || 
         (import.meta as any).env?.VITE_GEMINI_API_KEY || 
         (process.env as any).GEMINIAPIKEY;
       
-      if (!apiKey || apiKey === "undefined" || apiKey === "null") {
-        throw new Error("API Key is missing");
+      if (!key || key === "undefined" || key === "null") {
+        throw new Error("AUTH_ERROR: API Key missing");
       }
 
-      const ai = new GoogleGenAI({ apiKey });
+      const client = new GoogleGenAI({ apiKey: key });
       
-      // Convert messages to the format expected by the SDK
-      const history = messages.map(m => ({
-        role: m.role === 'user' ? 'user' : 'model',
-        parts: [{ text: m.text }]
-      }));
-
-      const chat = ai.chats.create({
+      const session = client.chats.create({
         model: "gemini-3-flash-preview",
-        history: history,
+        history: chatHistory.map(msg => ({
+          role: msg.role,
+          parts: [{ text: msg.content }]
+        })),
         config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
+          systemInstruction: MENTOR_PROMPT,
         },
       });
 
-      const response = await chat.sendMessage({
-        message: userMessage
+      const result = await session.sendMessage({
+        message: currentQuery
       });
 
-      const text = response.text;
-      if (text) {
-        setMessages(prev => [...prev, { role: 'model', text }]);
+      const responseText = result.text;
+      if (responseText) {
+        setChatHistory(prev => [...prev, { role: 'model', content: responseText }]);
       }
-    } catch (error: any) {
-      console.error("Error:", error);
-      const errorMessage = error?.message?.includes("API Key") 
-        ? "I'm having trouble connecting to my brain (the API key seems to be missing). Don't worry, this service is free—you don't need to buy anything. Please check the 'Secrets' panel in the AI Studio settings to ensure the GEMINI_API_KEY is set."
-        : "Something went wrong on my end. Give me a second and try again.";
-      setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
+    } catch (err: any) {
+      console.error("Mentor Service Error:", err);
+      
+      let feedback = "Something went wrong on my end. Give me a second and try again.";
+      
+      if (err?.message?.includes("AUTH_ERROR")) {
+        feedback = "Sumit's mentorship server is currently offline due to a configuration error (API key missing). Please ensure your environment variables are correctly set up.";
+      }
+
+      setChatHistory(prev => [...prev, { role: 'model', content: feedback }]);
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
-  const quickActions = [
+  const shortcuts = [
     { label: "TSD: The Relative Speed Trick", icon: <Zap className="w-4 h-4" /> },
     { label: "DILR: The Grid Elimination Method", icon: <BrainCircuit className="w-4 h-4" /> },
     { label: "VARC: Root Word Mnemonics", icon: <BookOpen className="w-4 h-4" /> },
@@ -105,9 +105,9 @@ export default function App() {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-[#fcfcfc] text-[#1a1a1a]">
-      {/* Header */}
-      <header className="bg-white border-b border-zinc-200 px-6 py-4 flex items-center justify-between z-10">
+    <div className="flex flex-col h-screen bg-[#fcfcfc] text-[#1a1a1a] font-sans">
+      {/* App Header */}
+      <header className="bg-white border-b border-zinc-200 px-6 py-4 flex items-center justify-between z-10 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="bg-black p-2 rounded-full">
             <GraduationCap className="text-white w-5 h-5" />
@@ -122,29 +122,27 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Chat Area */}
+      {/* Chat Viewport */}
       <main className="flex-1 overflow-hidden flex flex-col relative">
-        <div 
-          ref={scrollRef}
-          className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 scroll-smooth"
-        >
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6">
           <AnimatePresence initial={false}>
-            {messages.map((msg, idx) => (
+            {chatHistory.map((msg, idx) => (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 5 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div className={`max-w-[85%] sm:max-w-[70%] ${msg.role === 'user' ? 'bg-black text-white' : 'bg-white border border-zinc-100 shadow-sm'} p-5 rounded-2xl`}>
                   <div className="markdown-body text-[15px] leading-relaxed">
-                    <Markdown>{msg.text}</Markdown>
+                    <Markdown>{msg.content}</Markdown>
                   </div>
                 </div>
               </motion.div>
             ))}
           </AnimatePresence>
-          {isLoading && (
+          
+          {isProcessing && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -160,15 +158,16 @@ export default function App() {
               </div>
             </motion.div>
           )}
+          <div ref={chatEndRef} />
         </div>
 
-        {/* Quick Actions */}
-        {messages.length === 1 && (
+        {/* Suggested Queries */}
+        {chatHistory.length === 1 && (
           <div className="px-6 pb-6 flex flex-wrap gap-2 justify-center">
-            {quickActions.map((action, i) => (
+            {shortcuts.map((action, i) => (
               <button
                 key={i}
-                onClick={() => setInput(action.label)}
+                onClick={() => setUserQuery(action.label)}
                 className="px-4 py-2 bg-white border border-zinc-200 rounded-full text-[13px] font-bold text-zinc-600 hover:border-black hover:text-black transition-all"
               >
                 {action.label}
@@ -178,20 +177,20 @@ export default function App() {
         )}
       </main>
 
-      {/* Input Area */}
+      {/* Input Bar */}
       <footer className="p-4 sm:p-8 bg-white border-t border-zinc-100">
         <div className="max-w-3xl mx-auto relative">
           <input
             type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            value={userQuery}
+            onChange={(e) => setUserQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
             placeholder="Ask Sumit anything about CAT..."
             className="w-full pl-6 pr-16 py-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:border-black transition-all text-[15px]"
           />
           <button
-            onClick={handleSend}
-            disabled={isLoading || !input.trim()}
+            onClick={sendMessage}
+            disabled={isProcessing || !userQuery.trim()}
             className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center hover:bg-zinc-800 disabled:opacity-20 transition-all"
           >
             <Send className="w-4 h-4" />
