@@ -14,6 +14,8 @@ const MENTOR_PROMPT = `You are Sumit, an elite CAT coach who scored a perfect 10
 
 You are fluent in English, Hindi, and Hinglish. Respond in the language the student uses, or use Hinglish (a mix of Hindi and English) to make it more relatable and clear.
 
+TEACHING STYLE: You are teaching a student who is very weak in math. Break down every concept into its simplest form before showing the shortcut. Use analogies, simple examples, and a supportive yet firm "big brother" tone. Ensure that even the most basic steps are explained so the student doesn't get lost.
+
 CRITICAL REQUIREMENT: For every single question or topic the student asks about, you MUST provide exactly 20 distinct, high-value insights, shortcuts, or "insider" tips. Do not provide just one answer. Provide a "20-Point Masterclass" every time.
 
 Structure your response as follows:
@@ -85,7 +87,7 @@ export default function App() {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
     {
       role: 'model',
-      content: "Hey, I'm Sumit. 100th percentile in CAT, and I'm here to share my shortcuts. English, Hindi, ya Hinglish—jis mein bhi comfortable ho, pucho. What's on your mind for CAT 2026?"
+      content: "Hey, I'm Sumit. 100th percentile in CAT, and I'm here to share my shortcuts. Agar math weak hai toh tension mat lo, main zero se start karunga. English, Hindi, ya Hinglish—jis mein bhi comfortable ho, pucho. What's on your mind for CAT 2026?"
     }
   ]);
   const [userQuery, setUserQuery] = useState('');
@@ -192,15 +194,19 @@ export default function App() {
             {chatHistory.map((msg, idx) => (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`flex gap-3 max-w-[90%] sm:max-w-[80%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'}`}>
-                    {msg.role === 'user' ? <MessageSquare className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
+                <div className={`flex gap-4 max-w-[92%] sm:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 mt-1 shadow-md transition-transform hover:scale-110 ${msg.role === 'user' ? 'bg-gradient-to-br from-blue-500 to-blue-700 text-white' : 'bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 border border-zinc-200 dark:border-zinc-700'}`}>
+                    {msg.role === 'user' ? <MessageSquare className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
                   </div>
-                  <div className={`p-5 rounded-2xl ${msg.role === 'user' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/10' : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm'}`}>
+                  <div className={`p-6 rounded-[2rem] relative ${
+                    msg.role === 'user' 
+                      ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20 rounded-tr-none' 
+                      : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-tl-none'
+                  }`}>
                     <div className="markdown-body">
                       <Markdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
                         {msg.content}
@@ -249,26 +255,36 @@ export default function App() {
 
       {/* Input Bar */}
       <footer className="p-4 sm:p-8 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-t border-zinc-200 dark:border-zinc-800">
-        <div className="max-w-3xl mx-auto relative group">
-          <input
-            type="text"
-            value={userQuery}
-            onChange={(e) => setUserQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="Ask Sumit anything about CAT..."
-            className="w-full pl-6 pr-16 py-5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-[15px] dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 shadow-inner"
-          />
-          <button
-            onClick={sendMessage}
-            disabled={isProcessing || !userQuery.trim()}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-700 disabled:opacity-20 transition-all shadow-lg shadow-blue-600/20 active:scale-95"
-          >
-            <Send className="w-5 h-5" />
-          </button>
+        <div className="max-w-4xl mx-auto relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-[2rem] blur opacity-10 group-focus-within:opacity-20 transition duration-1000 group-focus-within:duration-200"></div>
+          <div className="relative flex items-center">
+            <input
+              type="text"
+              value={userQuery}
+              onChange={(e) => setUserQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+              placeholder="Ask Sumit anything about CAT..."
+              className="w-full pl-8 pr-20 py-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-[16px] dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 shadow-xl"
+            />
+            <button
+              onClick={sendMessage}
+              disabled={isProcessing || !userQuery.trim()}
+              className="absolute right-3 w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center hover:bg-blue-700 disabled:opacity-20 transition-all shadow-lg shadow-blue-600/30 active:scale-90"
+            >
+              {isProcessing ? <Loader2 className="w-6 h-6 animate-spin" /> : <Send className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
-        <p className="text-center text-[10px] text-zinc-400 dark:text-zinc-600 mt-4 font-medium tracking-wide uppercase">
-          Sumit's Elite Mentorship • Batch 2026
-        </p>
+        <div className="flex justify-center gap-6 mt-6">
+          <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
+            <div className="w-1 h-1 bg-green-500 rounded-full"></div>
+            Expert Verified
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
+            <div className="w-1 h-1 bg-blue-500 rounded-full"></div>
+            CAT 2026 Ready
+          </div>
+        </div>
       </footer>
 
       {/* Install Modal */}
