@@ -4,7 +4,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import Markdown from 'react-markdown';
-import { Send, GraduationCap, Zap, Timer, MessageSquare, ChevronRight, Loader2, BookOpen, Calculator, BrainCircuit } from 'lucide-react';
+import { Send, GraduationCap, Zap, Timer, MessageSquare, ChevronRight, Loader2, BookOpen, Calculator, BrainCircuit, Moon, Sun } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // The core logic for Sumit's responses
@@ -26,6 +26,25 @@ interface ChatMessage {
 }
 
 export default function App() {
+  // Theme management
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('theme');
+      return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
+
   // State for managing the conversation
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
     {
@@ -105,20 +124,29 @@ export default function App() {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-[#fcfcfc] text-[#1a1a1a] font-sans">
+    <div className="flex flex-col h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans transition-colors duration-300">
       {/* App Header */}
-      <header className="bg-white border-b border-zinc-200 px-6 py-4 flex items-center justify-between z-10 shadow-sm">
+      <header className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between z-10 shadow-sm transition-colors duration-300">
         <div className="flex items-center gap-3">
-          <div className="bg-black p-2 rounded-full">
-            <GraduationCap className="text-white w-5 h-5" />
+          <div className="bg-black dark:bg-white p-2 rounded-full">
+            <GraduationCap className="text-white dark:text-black w-5 h-5" />
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight">CAT-Master Pro</h1>
             <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-[0.2em]">Mentorship by Sumit (100%iler)</p>
           </div>
         </div>
-        <div className="hidden sm:block">
-          <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">CAT 2026 Batch</span>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            aria-label="Toggle theme"
+          >
+            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+          <div className="hidden sm:block">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">CAT 2026 Batch</span>
+          </div>
         </div>
       </header>
 
@@ -133,8 +161,8 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`max-w-[85%] sm:max-w-[70%] ${msg.role === 'user' ? 'bg-black text-white' : 'bg-white border border-zinc-100 shadow-sm'} p-5 rounded-2xl`}>
-                  <div className="markdown-body text-[15px] leading-relaxed">
+                <div className={`max-w-[85%] sm:max-w-[70%] ${msg.role === 'user' ? 'bg-black dark:bg-zinc-100 text-white dark:text-black' : 'bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-sm'} p-5 rounded-2xl`}>
+                  <div className="markdown-body text-[15px] leading-relaxed dark:prose-invert">
                     <Markdown>{msg.content}</Markdown>
                   </div>
                 </div>
@@ -150,9 +178,9 @@ export default function App() {
             >
               <div className="flex gap-2 items-center text-zinc-400 text-xs font-bold uppercase tracking-widest pl-2">
                 <div className="flex gap-1">
-                  <span className="w-1 h-1 bg-zinc-300 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                  <span className="w-1 h-1 bg-zinc-300 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                  <span className="w-1 h-1 bg-zinc-300 rounded-full animate-bounce"></span>
+                  <span className="w-1 h-1 bg-zinc-300 dark:bg-zinc-600 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                  <span className="w-1 h-1 bg-zinc-300 dark:bg-zinc-600 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                  <span className="w-1 h-1 bg-zinc-300 dark:bg-zinc-600 rounded-full animate-bounce"></span>
                 </div>
                 Sumit is typing...
               </div>
@@ -168,7 +196,7 @@ export default function App() {
               <button
                 key={i}
                 onClick={() => setUserQuery(action.label)}
-                className="px-4 py-2 bg-white border border-zinc-200 rounded-full text-[13px] font-bold text-zinc-600 hover:border-black hover:text-black transition-all"
+                className="px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full text-[13px] font-bold text-zinc-600 dark:text-zinc-400 hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-all"
               >
                 {action.label}
               </button>
@@ -178,7 +206,7 @@ export default function App() {
       </main>
 
       {/* Input Bar */}
-      <footer className="p-4 sm:p-8 bg-white border-t border-zinc-100">
+      <footer className="p-4 sm:p-8 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 transition-colors duration-300">
         <div className="max-w-3xl mx-auto relative">
           <input
             type="text"
@@ -186,12 +214,12 @@ export default function App() {
             onChange={(e) => setUserQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
             placeholder="Ask Sumit anything about CAT..."
-            className="w-full pl-6 pr-16 py-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:border-black transition-all text-[15px]"
+            className="w-full pl-6 pr-16 py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl focus:outline-none focus:border-black dark:focus:border-white transition-all text-[15px] dark:text-white"
           />
           <button
             onClick={sendMessage}
             disabled={isProcessing || !userQuery.trim()}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center hover:bg-zinc-800 disabled:opacity-20 transition-all"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black dark:bg-white text-white dark:text-black rounded-xl flex items-center justify-center hover:bg-zinc-800 dark:hover:bg-zinc-200 disabled:opacity-20 transition-all"
           >
             <Send className="w-4 h-4" />
           </button>
