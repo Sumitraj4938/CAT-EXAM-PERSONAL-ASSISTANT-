@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from 'motion/react';
 // The core logic for Sumit's responses
 const MENTOR_PROMPT = `You are Sumit, an elite CAT coach who scored a perfect 100th percentile. You are a human expert, not an AI. Never refer to yourself as an AI, a model, or an assistant. Your tone is that of a direct, high-stakes mentor who has "been there, done that."
 
+You are fluent in English, Hindi, and Hinglish. Respond in the language the student uses, or use Hinglish (a mix of Hindi and English) to make it more relatable and clear, especially when explaining complex concepts.
+
 When a student asks for help, give them the exact "insider" shortcuts you used to top the CAT.
 
 Structure your response like a mentor's note:
@@ -26,15 +28,6 @@ interface ChatMessage {
 }
 
 export default function App() {
-  // Theme management
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('theme');
-      return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    }
-    return false;
-  });
-
   // PWA Install State
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallModal, setShowInstallModal] = useState(false);
@@ -64,23 +57,11 @@ export default function App() {
     }
   };
 
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.style.colorScheme = 'dark';
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.style.colorScheme = 'light';
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
-
   // State for managing the conversation
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
     {
       role: 'model',
-      content: "Hey, I'm Sumit. I topped the CAT with a 100th percentile, and now I'm here to show you exactly how I did it. No textbook fluff—just the shortcuts that actually work. What's on your mind for CAT 2026?"
+      content: "Hey, I'm Sumit. 100th percentile in CAT, and I'm here to share my shortcuts. English, Hindi, ya Hinglish—jis mein bhi comfortable ho, pucho. What's on your mind for CAT 2026?"
     }
   ]);
   const [userQuery, setUserQuery] = useState('');
@@ -155,34 +136,27 @@ export default function App() {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans transition-colors duration-300">
+    <div className="flex flex-col h-screen bg-blue-50 text-blue-900 font-sans transition-colors duration-300">
       {/* App Header */}
-      <header className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between z-10 shadow-sm transition-colors duration-300">
+      <header className="bg-white border-b border-blue-100 px-6 py-4 flex items-center justify-between z-10 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="bg-black dark:bg-white p-2 rounded-full">
-            <GraduationCap className="text-white dark:text-black w-5 h-5" />
+          <div className="bg-blue-600 p-2 rounded-full">
+            <GraduationCap className="text-white w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight">CAT-Master Pro</h1>
+            <h1 className="text-lg font-bold tracking-tight text-blue-900">CAT-Master Pro</h1>
           </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
           <button 
             onClick={handleInstallClick}
-            className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-[11px] font-bold uppercase tracking-wider hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-blue-100 rounded-lg text-[11px] font-bold uppercase tracking-wider text-blue-700 hover:bg-blue-200 transition-colors"
           >
             <Smartphone className="w-3.5 h-3.5" />
             Install
           </button>
-          <button 
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-            aria-label="Toggle theme"
-          >
-            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
           <div className="hidden lg:block">
-            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">CAT 2026 Batch</span>
+            <span className="text-[11px] font-bold text-blue-400 uppercase tracking-widest">CAT 2026 Batch</span>
           </div>
         </div>
       </header>
@@ -198,8 +172,8 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`max-w-[85%] sm:max-w-[70%] ${msg.role === 'user' ? 'bg-black dark:bg-zinc-100 text-white dark:text-black' : 'bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-sm'} p-5 rounded-2xl`}>
-                  <div className="markdown-body text-[15px] leading-relaxed dark:prose-invert">
+                <div className={`max-w-[85%] sm:max-w-[70%] ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white border border-blue-100 shadow-sm'} p-5 rounded-2xl`}>
+                  <div className="markdown-body text-[15px] leading-relaxed">
                     <Markdown>{msg.content}</Markdown>
                   </div>
                 </div>
@@ -213,11 +187,11 @@ export default function App() {
               animate={{ opacity: 1 }}
               className="flex justify-start"
             >
-              <div className="flex gap-2 items-center text-zinc-400 text-xs font-bold uppercase tracking-widest pl-2">
+              <div className="flex gap-2 items-center text-blue-400 text-xs font-bold uppercase tracking-widest pl-2">
                 <div className="flex gap-1">
-                  <span className="w-1 h-1 bg-zinc-300 dark:bg-zinc-600 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                  <span className="w-1 h-1 bg-zinc-300 dark:bg-zinc-600 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                  <span className="w-1 h-1 bg-zinc-300 dark:bg-zinc-600 rounded-full animate-bounce"></span>
+                  <span className="w-1 h-1 bg-blue-300 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                  <span className="w-1 h-1 bg-blue-300 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                  <span className="w-1 h-1 bg-blue-300 rounded-full animate-bounce"></span>
                 </div>
                 Sumit is typing...
               </div>
@@ -233,7 +207,7 @@ export default function App() {
               <button
                 key={i}
                 onClick={() => setUserQuery(action.label)}
-                className="px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full text-[13px] font-bold text-zinc-600 dark:text-zinc-400 hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-all"
+                className="px-4 py-2 bg-white border border-blue-200 rounded-full text-[13px] font-bold text-blue-600 hover:border-blue-600 hover:text-blue-700 transition-all"
               >
                 {action.label}
               </button>
@@ -243,7 +217,7 @@ export default function App() {
       </main>
 
       {/* Input Bar */}
-      <footer className="p-4 sm:p-8 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 transition-colors duration-300">
+      <footer className="p-4 sm:p-8 bg-white border-t border-blue-100">
         <div className="max-w-3xl mx-auto relative">
           <input
             type="text"
@@ -251,12 +225,12 @@ export default function App() {
             onChange={(e) => setUserQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
             placeholder="Ask Sumit anything about CAT..."
-            className="w-full pl-6 pr-16 py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl focus:outline-none focus:border-black dark:focus:border-white transition-all text-[15px] dark:text-white"
+            className="w-full pl-6 pr-16 py-4 bg-blue-50 border border-blue-200 rounded-2xl focus:outline-none focus:border-blue-600 transition-all text-[15px] text-blue-900"
           />
           <button
             onClick={sendMessage}
             disabled={isProcessing || !userQuery.trim()}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black dark:bg-white text-white dark:text-black rounded-xl flex items-center justify-center hover:bg-zinc-800 dark:hover:bg-zinc-200 disabled:opacity-20 transition-all"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-700 disabled:opacity-20 transition-all"
           >
             <Send className="w-4 h-4" />
           </button>
@@ -266,50 +240,50 @@ export default function App() {
       {/* Install Modal */}
       <AnimatePresence>
         {showInstallModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-blue-900/60 backdrop-blur-sm">
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl p-8 shadow-2xl relative"
+              className="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative"
             >
               <button 
                 onClick={() => setShowInstallModal(false)}
-                className="absolute top-6 right-6 p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+                className="absolute top-6 right-6 p-2 hover:bg-blue-100 rounded-full transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-blue-900" />
               </button>
 
               <div className="flex flex-col items-center text-center space-y-6">
-                <div className="bg-black dark:bg-white p-4 rounded-3xl">
-                  <Smartphone className="text-white dark:text-black w-8 h-8" />
+                <div className="bg-blue-600 p-4 rounded-3xl">
+                  <Smartphone className="text-white w-8 h-8" />
                 </div>
                 
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-bold tracking-tight">Install CAT Master Pro</h2>
-                  <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed">
+                  <h2 className="text-2xl font-bold tracking-tight text-blue-900">Install CAT Master Pro</h2>
+                  <p className="text-blue-500 text-sm leading-relaxed">
                     Get the full app experience directly on your home screen. No APK download needed!
                   </p>
                 </div>
 
                 <div className="w-full space-y-4 pt-4">
-                  <div className="flex items-start gap-4 text-left bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl">
-                    <div className="bg-black dark:bg-white text-white dark:text-black w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0">1</div>
-                    <p className="text-sm">Open this site in <b>Chrome</b> on your Android phone.</p>
+                  <div className="flex items-start gap-4 text-left bg-blue-50 p-4 rounded-2xl">
+                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0">1</div>
+                    <p className="text-sm text-blue-900">Open this site in <b>Chrome</b> on your Android phone.</p>
                   </div>
-                  <div className="flex items-start gap-4 text-left bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl">
-                    <div className="bg-black dark:bg-white text-white dark:text-black w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0">2</div>
-                    <p className="text-sm">Tap the <b>three dots (⋮)</b> in the top right corner.</p>
+                  <div className="flex items-start gap-4 text-left bg-blue-50 p-4 rounded-2xl">
+                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0">2</div>
+                    <p className="text-sm text-blue-900">Tap the <b>three dots (⋮)</b> in the top right corner.</p>
                   </div>
-                  <div className="flex items-start gap-4 text-left bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl">
-                    <div className="bg-black dark:bg-white text-white dark:text-black w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0">3</div>
-                    <p className="text-sm">Select <b>"Install App"</b> or <b>"Add to Home Screen"</b>.</p>
+                  <div className="flex items-start gap-4 text-left bg-blue-50 p-4 rounded-2xl">
+                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0">3</div>
+                    <p className="text-sm text-blue-900">Select <b>"Install App"</b> or <b>"Add to Home Screen"</b>.</p>
                   </div>
                 </div>
 
                 <button 
                   onClick={() => setShowInstallModal(false)}
-                  className="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-2xl font-bold hover:opacity-90 transition-all"
+                  className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all"
                 >
                   Got it!
                 </button>
