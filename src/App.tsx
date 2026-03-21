@@ -52,9 +52,22 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error("API Key is not configured in the environment.");
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      
+      // Convert messages to the format expected by the SDK
+      const history = messages.map(m => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        parts: [{ text: m.text }]
+      }));
+
       const chat = ai.chats.create({
-        model: "gemini-3.1-pro-preview",
+        model: "gemini-3-flash-preview",
+        history: history,
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
         },
@@ -68,9 +81,12 @@ export default function App() {
       if (text) {
         setMessages(prev => [...prev, { role: 'model', text }]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error:", error);
-      setMessages(prev => [...prev, { role: 'model', text: "Something went wrong on my end. Give me a second and try again." }]);
+      const errorMessage = error?.message?.includes("API Key") 
+        ? "I can't connect right now because the API key is missing. Please check your settings."
+        : "Something went wrong on my end. Give me a second and try again.";
+      setMessages(prev => [...prev, { role: 'model', text: errorMessage }]);
     } finally {
       setIsLoading(false);
     }
