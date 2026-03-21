@@ -52,9 +52,14 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
-        throw new Error("API Key is not configured in the environment.");
+      // Check multiple possible locations for the API key
+      const apiKey = 
+        process.env.GEMINI_API_KEY || 
+        (import.meta as any).env?.VITE_GEMINI_API_KEY || 
+        (process.env as any).GEMINIAPIKEY;
+      
+      if (!apiKey || apiKey === "undefined" || apiKey === "null") {
+        throw new Error("API Key is missing");
       }
 
       const ai = new GoogleGenAI({ apiKey });
