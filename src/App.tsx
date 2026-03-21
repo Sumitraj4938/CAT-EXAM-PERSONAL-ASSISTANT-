@@ -4,7 +4,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import Markdown from 'react-markdown';
-import { Send, GraduationCap, Zap, Timer, MessageSquare, ChevronRight, Loader2, BookOpen, Calculator, BrainCircuit, Moon, Sun } from 'lucide-react';
+import { Send, GraduationCap, Zap, Timer, MessageSquare, ChevronRight, Loader2, BookOpen, Calculator, BrainCircuit, Moon, Sun, Download, Smartphone, Info, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // The core logic for Sumit's responses
@@ -34,6 +34,35 @@ export default function App() {
     }
     return false;
   });
+
+  // PWA Install State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallModal, setShowInstallModal] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      setShowInstallModal(true);
+      return;
+    }
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   useEffect(() => {
     if (isDarkMode) {
@@ -137,7 +166,14 @@ export default function App() {
             <h1 className="text-lg font-bold tracking-tight">CAT-Master Pro</h1>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <button 
+            onClick={handleInstallClick}
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-[11px] font-bold uppercase tracking-wider hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            Install
+          </button>
           <button 
             onClick={() => setIsDarkMode(!isDarkMode)}
             className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
@@ -145,7 +181,7 @@ export default function App() {
           >
             {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
-          <div className="hidden sm:block">
+          <div className="hidden lg:block">
             <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">CAT 2026 Batch</span>
           </div>
         </div>
@@ -226,6 +262,62 @@ export default function App() {
           </button>
         </div>
       </footer>
+
+      {/* Install Modal */}
+      <AnimatePresence>
+        {showInstallModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl p-8 shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setShowInstallModal(false)}
+                className="absolute top-6 right-6 p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex flex-col items-center text-center space-y-6">
+                <div className="bg-black dark:bg-white p-4 rounded-3xl">
+                  <Smartphone className="text-white dark:text-black w-8 h-8" />
+                </div>
+                
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold tracking-tight">Install CAT Master Pro</h2>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed">
+                    Get the full app experience directly on your home screen. No APK download needed!
+                  </p>
+                </div>
+
+                <div className="w-full space-y-4 pt-4">
+                  <div className="flex items-start gap-4 text-left bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl">
+                    <div className="bg-black dark:bg-white text-white dark:text-black w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0">1</div>
+                    <p className="text-sm">Open this site in <b>Chrome</b> on your Android phone.</p>
+                  </div>
+                  <div className="flex items-start gap-4 text-left bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl">
+                    <div className="bg-black dark:bg-white text-white dark:text-black w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0">2</div>
+                    <p className="text-sm">Tap the <b>three dots (⋮)</b> in the top right corner.</p>
+                  </div>
+                  <div className="flex items-start gap-4 text-left bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl">
+                    <div className="bg-black dark:bg-white text-white dark:text-black w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0">3</div>
+                    <p className="text-sm">Select <b>"Install App"</b> or <b>"Add to Home Screen"</b>.</p>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setShowInstallModal(false)}
+                  className="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-2xl font-bold hover:opacity-90 transition-all"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
