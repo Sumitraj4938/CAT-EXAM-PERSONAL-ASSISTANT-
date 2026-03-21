@@ -38,9 +38,11 @@ export default function App() {
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
+      document.documentElement.style.colorScheme = 'dark';
       localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.style.colorScheme = 'light';
       localStorage.setItem('theme', 'light');
     }
   }, [isDarkMode]);
@@ -133,7 +135,6 @@ export default function App() {
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight">CAT-Master Pro</h1>
-            <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-[0.2em]">Mentorship by Sumit (100%iler)</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
