@@ -1,0 +1,73 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // --- User Schema ---
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt']) &&
+             data.keys().size() >= 3 &&
+             data.uid == request.auth.uid &&
+             data.email is string &&
+             data.createdAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && 
+                      isValidUser(request.resource.data) && 
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt']);
+
+      match /conversations/{convId} {
+        function isValidConversation(data) {
+          return data.keys().hasAll(['userId', 'updatedAt', 'createdAt']) &&
+                 data.userId == userId &&
+                 data.updatedAt is timestamp &&
+                 data.createdAt is timestamp;
+        }
+
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidConversation(request.resource.data);
+        allow update: if isOwner(userId) && 
+                        isValidConversation(request.resource.data) &&
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'lastMessage', 'updatedAt']);
+        allow delete: if isOwner(userId);
+
+        match /messages/{msgId} {
+          function isValidMessage(data) {
+            return data.keys().hasAll(['role', 'content', 'createdAt']) &&
+                   data.role in ['user', 'model'] &&
+                   data.content is string &&
+                   data.content.size() <= 10000 &&
+                   data.createdAt is timestamp;
+          }
+
+          allow list, get: if isOwner(userId);
+          allow create: if isOwner(userId) && isValidMessage(request.resource.data);
+        }
+      }
+    }
+  }
+}

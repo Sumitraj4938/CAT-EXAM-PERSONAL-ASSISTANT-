@@ -6,8 +6,22 @@ import { GoogleGenAI } from "@google/genai";
 import Markdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import { Send, GraduationCap, Zap, Timer, MessageSquare, ChevronRight, Loader2, BookOpen, Calculator, BrainCircuit, Moon, Sun, Download, Smartphone, Info, X, Sparkles } from 'lucide-react';
+import { Send, GraduationCap, Zap, Timer, MessageSquare, ChevronRight, Loader2, BookOpen, Calculator, BrainCircuit, Moon, Sun, Download, Smartphone, Info, X, Sparkles, LogIn, LogOut, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { auth, db, googleProvider, signInWithPopup, signOut } from './firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { 
+  collection, 
+  addDoc, 
+  query, 
+  orderBy, 
+  onSnapshot, 
+  serverTimestamp, 
+  doc, 
+  setDoc, 
+  getDoc,
+  updateDoc
+} from 'firebase/firestore';
 
 // The core logic for Sumit's responses
 const MENTOR_PROMPT = `You are Sumit, an elite CAT coach who scored a perfect 100th percentile. You are a human expert, not an AI. Never refer to yourself as an AI, a model, or an assistant. Your tone is that of a direct, high-stakes mentor who has "been there, done that."
@@ -30,6 +44,7 @@ Keep it conversational, punchy, and authoritative. Use "I" and "me" naturally. Y
 interface ChatMessage {
   role: 'user' | 'model';
   content: string;
+  createdAt?: any;
 }
 
 export default function App() {
@@ -83,6 +98,97 @@ export default function App() {
     }
   };
 
+  // Firebase Auth State
+  const [user, setUser] = useState<User | null>(null);
+  const [currentConvId, setCurrentConvId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      if (u) {
+        // Sync user profile
+        const userRef = doc(db, 'users', u.uid);
+        setDoc(userRef, {
+          uid: u.uid,
+          email: u.email,
+          displayName: u.displayName,
+          photoURL: u.photoURL,
+          updatedAt: serverTimestamp(),
+          createdAt: serverTimestamp()
+        }, { merge: true });
+        
+        // Start a default conversation for now or load latest
+        ensureActiveConversation(u.uid);
+      } else {
+        setChatHistory([
+          {
+            role: 'model',
+            content: "Hey, I'm Sumit. 100th percentile in CAT, and I'm here to share my shortcuts. Agar math weak hai toh tension mat lo, main zero se start karunga. English, Hindi, ya Hinglish—jis mein bhi comfortable ho, pucho. What's on your mind for CAT 2026?"
+          }
+        ]);
+        setCurrentConvId(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const ensureActiveConversation = async (uid: string) => {
+    // For simplicity, we use a single conversation "default" per user for now
+    const convId = "default_session";
+    const convRef = doc(db, 'users', uid, 'conversations', convId);
+    const convSnap = await getDoc(convRef);
+    
+    if (!convSnap.exists()) {
+      await setDoc(convRef, {
+        userId: uid,
+        title: "Main Mentorship Chat",
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp()
+      });
+    }
+    setCurrentConvId(convId);
+  };
+
+  // Sync messages from Firestore
+  useEffect(() => {
+    if (user && currentConvId) {
+      const msgsRef = collection(db, 'users', user.uid, 'conversations', currentConvId, 'messages');
+      const q = query(msgsRef, orderBy('createdAt', 'asc'));
+      
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const msgs = snapshot.docs.map(doc => doc.data() as ChatMessage);
+        if (msgs.length > 0) {
+          setChatHistory(msgs);
+        } else {
+          // Add welcome message to Firestore if empty
+          const welcome = {
+            role: 'model' as const,
+            content: "Hey, I'm Sumit. 100th percentile in CAT, and I'm here to share my shortcuts. Agar math weak hai toh tension mat lo, main zero se start karunga. English, Hindi, ya Hinglish—jis mein bhi comfortable ho, pucho. What's on your mind for CAT 2026?",
+            createdAt: serverTimestamp()
+          };
+          addDoc(msgsRef, welcome);
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, [user, currentConvId]);
+
+  const handleSignIn = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+      console.error("Sign In Error:", error);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Sign Out Error:", error);
+    }
+  };
+
   // State for managing the conversation
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
     {
@@ -104,7 +210,25 @@ export default function App() {
 
     const currentQuery = userQuery.trim();
     setUserQuery('');
-    setChatHistory(prev => [...prev, { role: 'user', content: currentQuery }]);
+    
+    const userMessage: ChatMessage = { role: 'user', content: currentQuery };
+    
+    // Optimistically update local state if not logged in (legacy support)
+    if (!user) {
+      setChatHistory(prev => [...prev, userMessage]);
+    } else if (currentConvId) {
+      // Save user message to Firestore
+      const msgsRef = collection(db, 'users', user.uid, 'conversations', currentConvId, 'messages');
+      await addDoc(msgsRef, {
+        ...userMessage,
+        createdAt: serverTimestamp()
+      });
+      
+      // Update conversation timestamp
+      const convRef = doc(db, 'users', user.uid, 'conversations', currentConvId);
+      updateDoc(convRef, { updatedAt: serverTimestamp() });
+    }
+
     setIsProcessing(true);
 
     try {
@@ -119,6 +243,7 @@ export default function App() {
 
       const client = new GoogleGenAI({ apiKey: key });
       
+      // We pass the full history (up to current) to Gemini
       const session = client.chats.create({
         model: "gemini-3-flash-preview",
         history: chatHistory.map(msg => ({
@@ -136,7 +261,17 @@ export default function App() {
 
       const responseText = result.text;
       if (responseText) {
-        setChatHistory(prev => [...prev, { role: 'model', content: responseText }]);
+        const modelMessage: ChatMessage = { role: 'model', content: responseText };
+        if (!user) {
+          setChatHistory(prev => [...prev, modelMessage]);
+        } else if (currentConvId) {
+          // Save model response to Firestore
+          const msgsRef = collection(db, 'users', user.uid, 'conversations', currentConvId, 'messages');
+          await addDoc(msgsRef, {
+            ...modelMessage,
+            createdAt: serverTimestamp()
+          });
+        }
       }
     } catch (err: any) {
       console.error("Mentor Service Error:", err);
@@ -170,13 +305,29 @@ export default function App() {
           </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
-          <button 
-            onClick={handleInstallClick}
-            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-full text-[11px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all"
-          >
-            <Smartphone className="w-3.5 h-3.5" />
-            Install
-          </button>
+          {user ? (
+            <div className="flex items-center gap-3">
+              <div className="hidden md:flex flex-col items-end">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Aspirant Mode</span>
+                <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">{user.displayName}</span>
+              </div>
+              <button 
+                onClick={handleSignOut}
+                className="p-2.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 transition-all border border-zinc-200 dark:border-zinc-700"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={handleSignIn}
+              className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-full text-[11px] font-bold uppercase tracking-wider hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
+            >
+              <LogIn className="w-4 h-4" />
+              Sign In
+            </button>
+          )}
           <button 
             onClick={() => setIsDarkMode(!isDarkMode)}
             className="p-2.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all"
