@@ -1,5 +1,5 @@
 // Sumit's CAT Mentorship App - Hand-crafted for CAT 2026 aspirants
-// Author: Sumit (100%iler)
+// Author: Sumit Raj (100%iler)
 
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
@@ -24,11 +24,11 @@ import {
 } from 'firebase/firestore';
 
 // The core logic for Sumit's responses
-const MENTOR_PROMPT = `You are Sumit, an elite CAT coach who scored a perfect 100th percentile. You are a human expert, not an AI. Never refer to yourself as an AI, a model, or an assistant. Your tone is that of a direct, high-stakes mentor who has "been there, done that."
+const MENTOR_PROMPT = `You are Sumit Raj, an elite CAT coach who scored a perfect 100th percentile. You are a human expert, not an AI. Never refer to yourself as an AI, a model, or an assistant. Your tone is that of a direct, high-stakes mentor who has "been there, done that."
 
 You are fluent in English, Hindi, and Hinglish. Respond in the language the student uses, or use Hinglish (a mix of Hindi and English) to make it more relatable and clear.
 
-TEACHING STYLE: You are teaching a student who is very weak in math. Break down every concept into its simplest form before showing the shortcut. Use analogies, simple examples, and a supportive yet firm "big brother" tone. Ensure that even the most basic steps are explained so the student doesn't get lost.
+TEACHING STYLE: You are teaching a student who is very weak in math. Break down every concept into its simplest form before showing the shortcut. Use analogies, simple examples, and a supportive yet firm "big sister/brother" tone. Ensure that even the most basic steps are explained so the student doesn't get lost.
 
 CRITICAL REQUIREMENT: For every single question or topic the student asks about, you MUST provide exactly 20 distinct, high-value insights, shortcuts, or "insider" tips. Do not provide just one answer. Provide a "20-Point Masterclass" every time.
 
@@ -39,7 +39,7 @@ Structure your response as follows:
 
 Use standard Markdown. For math, use $...$ for inline and $$...$$ for block math.
 
-Keep it conversational, punchy, and authoritative. Use "I" and "me" naturally. You are Sumit, the 100-percentiler.`;
+Keep it conversational, punchy, and authoritative. Use "I" and "me" naturally. You are Sumit Raj, the 100-percentiler.`;
 
 interface ChatMessage {
   role: 'user' | 'model';
@@ -123,7 +123,7 @@ export default function App() {
         setChatHistory([
           {
             role: 'model',
-            content: "Hey, I'm Sumit. 100th percentile in CAT, and I'm here to share my shortcuts. Agar math weak hai toh tension mat lo, main zero se start karunga. English, Hindi, ya Hinglish—jis mein bhi comfortable ho, pucho. What's on your mind for CAT 2026?"
+            content: "Hey, I'm Sumit Raj. 100th percentile in CAT, and I'm here to share my shortcuts. Agar math weak hai toh tension mat lo, main zero se start karunga. English, Hindi, ya Hinglish—jis mein bhi comfortable ho, pucho. What's on your mind for CAT 2026?"
           }
         ]);
         setCurrentConvId(null);
@@ -163,7 +163,7 @@ export default function App() {
           // Add welcome message to Firestore if empty
           const welcome = {
             role: 'model' as const,
-            content: "Hey, I'm Sumit. 100th percentile in CAT, and I'm here to share my shortcuts. Agar math weak hai toh tension mat lo, main zero se start karunga. English, Hindi, ya Hinglish—jis mein bhi comfortable ho, pucho. What's on your mind for CAT 2026?",
+            content: "Hey, I'm Sumit Raj. 100th percentile in CAT, and I'm here to share my shortcuts. Agar math weak hai toh tension mat lo, main zero se start karunga. English, Hindi, ya Hinglish—jis mein bhi comfortable ho, pucho. What's on your mind for CAT 2026?",
             createdAt: serverTimestamp()
           };
           addDoc(msgsRef, welcome);
@@ -193,7 +193,7 @@ export default function App() {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
     {
       role: 'model',
-      content: "Hey, I'm Sumit. 100th percentile in CAT, and I'm here to share my shortcuts. Agar math weak hai toh tension mat lo, main zero se start karunga. English, Hindi, ya Hinglish—jis mein bhi comfortable ho, pucho. What's on your mind for CAT 2026?"
+      content: "Hey, I'm Sumit Raj. 100th percentile in CAT, and I'm here to share my shortcuts. Agar math weak hai toh tension mat lo, main zero se start karunga. English, Hindi, ya Hinglish—jis mein bhi comfortable ho, pucho. What's on your mind for CAT 2026?"
     }
   ]);
   const [userQuery, setUserQuery] = useState('');
@@ -301,7 +301,7 @@ export default function App() {
             <GraduationCap className="text-white w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-zinc-900 to-zinc-500 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent">CAT-Master Pro</h1>
+            <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-zinc-900 to-zinc-500 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent">Sumit Raj</h1>
           </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
@@ -381,7 +381,7 @@ export default function App() {
                   <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse [animation-delay:200ms]"></span>
                   <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse [animation-delay:400ms]"></span>
                 </div>
-                Sumit is strategizing...
+                Sumit Raj is strategizing...
               </div>
             </motion.div>
           )}
@@ -414,7 +414,7 @@ export default function App() {
               value={userQuery}
               onChange={(e) => setUserQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-              placeholder="Ask Sumit anything about CAT..."
+              placeholder="Ask Sumit Raj anything about CAT..."
               className="w-full pl-8 pr-20 py-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-[16px] dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 shadow-xl"
             />
             <button
@@ -463,7 +463,7 @@ export default function App() {
                 <div className="space-y-3">
                   <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Install App</h2>
                   <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed max-w-[250px] mx-auto">
-                    Get Sumit's shortcuts directly on your home screen.
+                    Get Sumit Raj's shortcuts directly on your home screen.
                   </p>
                 </div>
 

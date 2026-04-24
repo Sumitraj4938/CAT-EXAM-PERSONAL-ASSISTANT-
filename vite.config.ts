@@ -16,7 +16,7 @@ export default defineConfig(({mode}) => {
         manifest: {
           name: 'CAT Master Pro',
           short_name: 'CAT Master',
-          description: 'Elite CAT Mentorship by Sumit (100%iler)',
+          description: 'Elite CAT Mentorship by Sumit Raj (100%iler)',
           theme_color: '#000000',
           icons: [
             {

@@ -15,7 +15,7 @@
     },
     "Conversation": {
       "title": "Conversation",
-      "description": "A chat session with Sumit",
+      "description": "A chat session with Sumit Raj",
       "type": "object",
       "properties": {
         "userId": { "type": "string" },
